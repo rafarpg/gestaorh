@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingHorizontal="24dp"
+    android:paddingTop="16dp">
+
+    <com.google.android.material.textfield.TextInputLayout
+        style="@style/CampoTexto"
+        android:hint="@string/data">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/campoData"
+            style="@style/CampoSeletor" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <com.google.android.material.textfield.TextInputLayout
+            style="@style/CampoTexto"
+            android:layout_width="0dp"
+            android:layout_marginEnd="4dp"
+            android:layout_weight="1"
+            android:hint="@string/entrada">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/campoEntrada"
+                style="@style/CampoSeletor" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            style="@style/CampoTexto"
+            android:layout_width="0dp"
+            android:layout_marginStart="4dp"
+            android:layout_weight="1"
+            android:hint="@string/saida_almoco">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/campoSaidaAlmoco"
+                style="@style/CampoSeletor" />
+        </com.google.android.material.textfield.TextInputLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <com.google.android.material.textfield.TextInputLayout
+            style="@style/CampoTexto"
+            android:layout_width="0dp"
+            android:layout_marginEnd="4dp"
+            android:layout_weight="1"
+            android:hint="@string/retorno_almoco">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/campoRetornoAlmoco"
+                style="@style/CampoSeletor" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            style="@style/CampoTexto"
+            android:layout_width="0dp"
+            android:layout_marginStart="4dp"
+            android:layout_weight="1"
+            android:hint="@string/saida">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/campoSaida"
+                style="@style/CampoSeletor" />
+        </com.google.android.material.textfield.TextInputLayout>
+    </LinearLayout>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:text="@string/motivo" />
+
+    <Spinner
+        android:id="@+id/seletorMotivo"
+        android:layout_width="match_parent"
+        android:layout_height="48dp" />
+</LinearLayout>

@@ -1,0 +1,26 @@
+package br.com.ponto.controller;
+
+import br.com.ponto.dto.LoginRequest;
+import br.com.ponto.dto.LoginResponse;
+import br.com.ponto.service.AutenticacaoService;
+import jakarta.validation.Valid;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@RequestMapping("/api/auth")
+public class AuthController {
+
+    private final AutenticacaoService autenticacaoService;
+
+    public AuthController(AutenticacaoService autenticacaoService) {
+        this.autenticacaoService = autenticacaoService;
+    }
+
+    @PostMapping("/login")
+    public LoginResponse login(@RequestBody @Valid LoginRequest request) {
+        return autenticacaoService.login(request);
+    }
+}
