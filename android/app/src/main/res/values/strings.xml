@@ -36,4 +36,25 @@
     <string name="perfil_rh">Perfil RH</string>
     <string name="nenhum_registro">Nenhum registro encontrado</string>
     <string name="manual">Manual</string>
+    <string name="ola_usuario">Olá, %1$s</string>
+    <string name="nenhuma_marcacao_hoje">Nenhuma marcação hoje</string>
+    <string name="dia_lancado_manualmente">O dia de hoje foi lançado manualmente</string>
+    <string name="todas_marcacoes_feitas">Todas as marcações de hoje foram feitas</string>
+    <string name="proxima_marcacao">Próxima marcação: %1$s</string>
+    <string name="marcacao_registrada">%1$s registrada às %2$s</string>
+    <string name="ponto_manual_salvo">Ponto manual salvo</string>
+    <string name="resumo_historico">Saldo do mês: %1$s     Banco de horas: %2$s</string>
+    <string name="trabalhado">Trabalhado: %1$s</string>
+    <string name="incompleto">Incompleto</string>
+    <string name="solicitacao_enviada">Solicitação enviada</string>
+    <string name="ferias_decididas">Férias %1$ss</string>
+    <string name="funcionario_salvo">Funcionário salvo</string>
+    <string name="funcionario_excluido">Funcionário excluído</string>
+    <string name="novo_funcionario">Novo funcionário</string>
+    <string name="editar_funcionario">Editar funcionário</string>
+    <string name="ver_historico_ponto">Ver histórico de ponto</string>
+    <string name="editar">Editar</string>
+    <string name="excluir">Excluir</string>
+    <string name="confirmar_exclusao_funcionario">Excluir %1$s e todos os seus registros?</string>
+    <string name="rh">RH</string>
 </resources>

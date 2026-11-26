@@ -33,8 +33,16 @@ public class AutenticacaoService {
     }
 
     public Funcionario buscarPorToken(String token) {
-        return funcionarioRepository.findByToken(String.valueOf(token))
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Faca login para continuar"));
+        if (token == null || token.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Faça login para continuar");
+        }
+        return funcionarioRepository.findByToken(token)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Faça login para continuar"));
+    }
+
+    public void logout(Funcionario funcionario) {
+        funcionario.setToken(null);
+        funcionarioRepository.save(funcionario);
     }
 
     public void exigirRh(Funcionario funcionario) {

@@ -8,6 +8,7 @@ import br.com.ponto.model.StatusFerias;
 import br.com.ponto.service.AutenticacaoService;
 import br.com.ponto.service.FeriasService;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestAttribute;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -37,6 +39,7 @@ public class FeriasController {
     }
 
     @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
     public FeriasResponse solicitar(@RequestBody @Valid FeriasRequest request,
                                     @RequestAttribute(AutenticacaoInterceptor.USUARIO_LOGADO) Funcionario usuario) {
         return feriasService.solicitar(usuario, request);

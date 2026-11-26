@@ -11,6 +11,7 @@ import br.com.ponto.service.AutenticacaoService;
 import br.com.ponto.service.FuncionarioService;
 import br.com.ponto.service.PontoService;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestAttribute;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDate;
@@ -44,6 +46,7 @@ public class PontoController {
     }
 
     @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
     public MarcacaoResponse registrar(@RequestAttribute(AutenticacaoInterceptor.USUARIO_LOGADO) Funcionario usuario) {
         return pontoService.registrar(usuario);
     }

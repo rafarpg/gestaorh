@@ -34,7 +34,7 @@ public class FuncionarioService {
 
     public Funcionario buscar(Long id) {
         return funcionarioRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Funcionario nao encontrado"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Funcionário não encontrado"));
     }
 
     public FuncionarioResponse salvar(Funcionario funcionario, FuncionarioRequest request) {
@@ -48,7 +48,10 @@ public class FuncionarioService {
     }
 
     @Transactional
-    public void excluir(Long id) {
+    public void excluir(Long id, Funcionario usuarioLogado) {
+        if (usuarioLogado.getId().equals(id)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Você não pode excluir o próprio usuário");
+        }
         Funcionario funcionario = buscar(id);
         registroPontoRepository.deleteByFuncionario(funcionario);
         feriasRepository.deleteByFuncionario(funcionario);

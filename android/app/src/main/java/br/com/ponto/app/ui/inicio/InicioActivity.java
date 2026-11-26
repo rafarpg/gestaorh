@@ -8,6 +8,8 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 
+import br.com.ponto.app.R;
+import br.com.ponto.app.api.Resultado;
 import br.com.ponto.app.api.Sessao;
 import br.com.ponto.app.databinding.ActivityInicioBinding;
 import br.com.ponto.app.model.Marcacao;
@@ -30,38 +32,44 @@ public class InicioActivity extends AppCompatActivity {
         setContentView(tela.getRoot());
         viewModel = new ViewModelProvider(this).get(InicioViewModel.class);
 
-        tela.textoOla.setText("Olá, " + Sessao.nome());
+        tela.textoOla.setText(getString(R.string.ola_usuario, Sessao.nome()));
         tela.areaRh.setVisibility(Sessao.isRh() ? View.VISIBLE : View.GONE);
 
-        tela.botaoBaterPonto.setOnClickListener(v -> viewModel.baterPonto());
+        tela.botaoBaterPonto.setOnClickListener(v -> {
+            tela.botaoBaterPonto.setEnabled(false);
+            viewModel.baterPonto();
+        });
         tela.botaoHistorico.setOnClickListener(v -> startActivity(new Intent(this, HistoricoActivity.class)));
         tela.botaoFerias.setOnClickListener(v -> startActivity(new Intent(this, FeriasActivity.class)));
         tela.botaoFuncionarios.setOnClickListener(v -> startActivity(new Intent(this, FuncionariosActivity.class)));
         tela.botaoFeriasPendentes.setOnClickListener(v -> startActivity(
                 new Intent(this, FeriasActivity.class).putExtra(FeriasActivity.EXTRA_PENDENTES, true)));
         tela.botaoSair.setOnClickListener(v -> {
-            Sessao.sair();
+            viewModel.sair();
             voltarParaLogin();
         });
 
         viewModel.getHoje().observe(this, resultado -> {
             if (resultado.ok()) {
                 mostrar(resultado.dados);
-            } else if (!Sessao.logado()) {
-                voltarParaLogin();
             } else {
-                Toast.makeText(this, resultado.erro, Toast.LENGTH_LONG).show();
+                tratarErro(resultado.erro);
             }
         });
 
-        viewModel.getMarcacao().observe(this, resultado -> {
+        viewModel.getMarcacao().observe(this, evento -> {
+            Resultado<Marcacao> resultado = evento.consumir();
+            if (resultado == null) {
+                return;
+            }
             if (resultado.ok()) {
                 Marcacao marcacao = resultado.dados;
-                Toast.makeText(this, Formatador.texto(marcacao.tipo) + " registrada às " + marcacao.hora,
-                        Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, getString(R.string.marcacao_registrada,
+                        Formatador.texto(marcacao.tipo), marcacao.hora), Toast.LENGTH_SHORT).show();
                 viewModel.carregar();
             } else {
-                Toast.makeText(this, resultado.erro, Toast.LENGTH_LONG).show();
+                tela.botaoBaterPonto.setEnabled(true);
+                tratarErro(resultado.erro);
             }
         });
     }
@@ -72,8 +80,18 @@ public class InicioActivity extends AppCompatActivity {
         viewModel.carregar();
     }
 
+    private void tratarErro(String erro) {
+        if (!Sessao.logado()) {
+            voltarParaLogin();
+        } else {
+            Toast.makeText(this, erro, Toast.LENGTH_LONG).show();
+        }
+    }
+
     private void voltarParaLogin() {
-        startActivity(new Intent(this, LoginActivity.class));
+        Intent intent = new Intent(this, LoginActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
         finish();
     }
 
@@ -85,15 +103,16 @@ public class InicioActivity extends AppCompatActivity {
         for (Marcacao marcacao : hoje.marcacoes) {
             marcacoes.append(Formatador.texto(marcacao.tipo)).append(": ").append(marcacao.hora).append('\n');
         }
-        tela.textoMarcacoes.setText(marcacoes.length() > 0 ? marcacoes.toString().trim() : "Nenhuma marcação hoje");
+        tela.textoMarcacoes.setText(marcacoes.length() > 0 ? marcacoes.toString().trim()
+                : getString(R.string.nenhuma_marcacao_hoje));
 
         tela.botaoBaterPonto.setEnabled(hoje.proximaMarcacao != null);
         if (hoje.manual) {
-            tela.textoProxima.setText("O dia de hoje foi lançado manualmente");
+            tela.textoProxima.setText(R.string.dia_lancado_manualmente);
         } else if (hoje.proximaMarcacao == null) {
-            tela.textoProxima.setText("Todas as marcações de hoje foram feitas");
+            tela.textoProxima.setText(R.string.todas_marcacoes_feitas);
         } else {
-            tela.textoProxima.setText("Próxima marcação: " + Formatador.texto(hoje.proximaMarcacao));
+            tela.textoProxima.setText(getString(R.string.proxima_marcacao, Formatador.texto(hoje.proximaMarcacao)));
         }
     }
 }

@@ -6,19 +6,20 @@ import androidx.lifecycle.ViewModel;
 
 import br.com.ponto.app.api.ApiClient;
 import br.com.ponto.app.api.Chamada;
+import br.com.ponto.app.api.Evento;
 import br.com.ponto.app.api.Resultado;
 import br.com.ponto.app.model.LoginRequest;
 import br.com.ponto.app.model.LoginResponse;
 
 public class LoginViewModel extends ViewModel {
 
-    private final MutableLiveData<Resultado<LoginResponse>> resultado = new MutableLiveData<>();
+    private final MutableLiveData<Evento<Resultado<LoginResponse>>> resultado = new MutableLiveData<>();
 
-    public LiveData<Resultado<LoginResponse>> getResultado() {
+    public LiveData<Evento<Resultado<LoginResponse>>> getResultado() {
         return resultado;
     }
 
     public void entrar(String login, String senha) {
-        Chamada.executar(ApiClient.api().login(new LoginRequest(login, senha)), resultado);
+        Chamada.executarEvento(ApiClient.api().login(new LoginRequest(login, senha)), resultado);
     }
 }

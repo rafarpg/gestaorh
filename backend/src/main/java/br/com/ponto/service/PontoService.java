@@ -49,7 +49,7 @@ public class PontoService {
         List<RegistroPonto> marcacoes = marcacoesDoDia(funcionario, hoje);
         TipoMarcacao proxima = proximaMarcacao(marcacoes);
         if (isManual(marcacoes) || proxima == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "O ponto de hoje ja esta completo");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "O ponto de hoje já está completo");
         }
         LocalTime agora = LocalTime.now().truncatedTo(ChronoUnit.MINUTES);
         RegistroPonto registro = new RegistroPonto(funcionario, hoje, agora, proxima, OrigemPonto.NORMAL, null);
@@ -61,7 +61,7 @@ public class PontoService {
         List<LocalTime> horarios = List.of(request.entrada(), request.saidaAlmoco(), request.retornoAlmoco(), request.saida());
         for (int i = 1; i < horarios.size(); i++) {
             if (!horarios.get(i).isAfter(horarios.get(i - 1))) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Os horarios devem estar em ordem crescente");
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Os horários devem estar em ordem crescente");
             }
         }
         registroPontoRepository.deleteByFuncionarioAndData(funcionario, request.data());
@@ -78,7 +78,7 @@ public class PontoService {
 
     public HistoricoResponse historico(Funcionario funcionario, LocalDate inicio, LocalDate fim) {
         List<RegistroPonto> registros = registroPontoRepository
-                .findByFuncionarioAndDataBetweenOrderByDataAscHoraAsc(funcionario, inicio, fim);
+                .findByFuncionarioAndDataBetweenOrderByDataAscHoraAscIdAsc(funcionario, inicio, fim);
         List<DiaPontoResponse> dias = agruparPorDia(registros).entrySet().stream()
                 .map(dia -> resumoDoDia(dia.getKey(), dia.getValue()))
                 .toList();
@@ -88,7 +88,7 @@ public class PontoService {
     }
 
     private int bancoDeHoras(Funcionario funcionario) {
-        return agruparPorDia(registroPontoRepository.findByFuncionario(funcionario)).values().stream()
+        return agruparPorDia(registroPontoRepository.findByFuncionarioOrderByDataAscHoraAscIdAsc(funcionario)).values().stream()
                 .map(CalculadoraHoras::saldoDoDia)
                 .filter(Objects::nonNull)
                 .mapToInt(Integer::intValue)
@@ -107,7 +107,7 @@ public class PontoService {
     }
 
     private List<RegistroPonto> marcacoesDoDia(Funcionario funcionario, LocalDate data) {
-        return registroPontoRepository.findByFuncionarioAndDataOrderByHoraAsc(funcionario, data);
+        return registroPontoRepository.findByFuncionarioAndDataOrderByHoraAscIdAsc(funcionario, data);
     }
 
     private static Map<LocalDate, List<RegistroPonto>> agruparPorDia(List<RegistroPonto> registros) {

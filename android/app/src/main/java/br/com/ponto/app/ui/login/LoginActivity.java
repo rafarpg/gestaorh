@@ -8,8 +8,10 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 
+import br.com.ponto.app.api.Resultado;
 import br.com.ponto.app.api.Sessao;
 import br.com.ponto.app.databinding.ActivityLoginBinding;
+import br.com.ponto.app.model.LoginResponse;
 import br.com.ponto.app.ui.inicio.InicioActivity;
 
 public class LoginActivity extends AppCompatActivity {
@@ -33,7 +35,11 @@ public class LoginActivity extends AppCompatActivity {
             viewModel.entrar(tela.campoEmail.getText().toString(), tela.campoSenha.getText().toString());
         });
 
-        viewModel.getResultado().observe(this, resultado -> {
+        viewModel.getResultado().observe(this, evento -> {
+            Resultado<LoginResponse> resultado = evento.consumir();
+            if (resultado == null) {
+                return;
+            }
             carregando(false);
             if (resultado.ok()) {
                 Sessao.salvar(resultado.dados);

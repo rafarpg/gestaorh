@@ -11,6 +11,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -47,6 +48,14 @@ class ApiTest {
     }
 
     @Test
+    void logoutInvalidaToken() throws Exception {
+        String token = novoFuncionario("55555555555", "logout@empresa.com");
+
+        chamar(post("/api/auth/logout"), token).andExpect(status().isNoContent());
+        chamar(get("/api/ponto/hoje"), token).andExpect(status().isUnauthorized());
+    }
+
+    @Test
     void funcionarioNaoAcessaEndpointsDoRh() throws Exception {
         chamar(get("/api/funcionarios"), tokenMaria).andExpect(status().isForbidden());
         chamar(get("/api/ferias/pendentes"), tokenMaria).andExpect(status().isForbidden());
@@ -59,21 +68,43 @@ class ApiTest {
                  "cargo":"Vendedor","departamento":"Comercial","perfil":"FUNCIONARIO"}
                 """;
         chamar(post("/api/funcionarios").contentType(MediaType.APPLICATION_JSON).content(corpo), tokenRh)
-                .andExpect(status().isOk());
+                .andExpect(status().isCreated());
         login("joao@empresa.com");
 
         chamar(post("/api/funcionarios").contentType(MediaType.APPLICATION_JSON).content(corpo), tokenRh)
                 .andExpect(status().isConflict());
+
+        String cpfInvalido = corpo.replace("22222222222", "123").replace("joao@empresa.com", "outro@empresa.com");
+        chamar(post("/api/funcionarios").contentType(MediaType.APPLICATION_JSON).content(cpfInvalido), tokenRh)
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void rhNaoPodeExcluirASiMesmoMasPodeExcluirOutro() throws Exception {
+        String lista = chamar(get("/api/funcionarios"), tokenRh)
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        Integer idRh = JsonPath.read(lista, "$[?(@.email == 'rh@empresa.com')].id").toString()
+                .replaceAll("[^0-9]", "").isEmpty() ? null
+                : Integer.valueOf(JsonPath.read(lista, "$[?(@.email == 'rh@empresa.com')].id").toString().replaceAll("[^0-9]", ""));
+        chamar(delete("/api/funcionarios/" + idRh), tokenRh).andExpect(status().isBadRequest());
+
+        String criado = chamar(post("/api/funcionarios").contentType(MediaType.APPLICATION_JSON)
+                .content("{\"nome\":\"Temp\",\"cpf\":\"66666666666\",\"email\":\"temp@empresa.com\",\"cargo\":\"Aux\",\"departamento\":\"RH\",\"perfil\":\"FUNCIONARIO\"}"), tokenRh)
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+        Integer idTemp = JsonPath.read(criado, "$.id");
+        chamar(delete("/api/funcionarios/" + idTemp), tokenRh).andExpect(status().isNoContent());
     }
 
     @Test
     void pontoSegueASequenciaEBloqueiaAQuintaMarcacao() throws Exception {
         String token = novoFuncionario("33333333333", "ponto@empresa.com");
 
-        chamar(post("/api/ponto"), token).andExpect(jsonPath("$.tipo").value("ENTRADA"));
-        chamar(post("/api/ponto"), token).andExpect(jsonPath("$.tipo").value("SAIDA_ALMOCO"));
-        chamar(post("/api/ponto"), token).andExpect(jsonPath("$.tipo").value("RETORNO_ALMOCO"));
-        chamar(post("/api/ponto"), token).andExpect(jsonPath("$.tipo").value("SAIDA"));
+        chamar(post("/api/ponto"), token).andExpect(status().isCreated()).andExpect(jsonPath("$.tipo").value("ENTRADA"));
+        chamar(post("/api/ponto"), token).andExpect(status().isCreated()).andExpect(jsonPath("$.tipo").value("SAIDA_ALMOCO"));
+        chamar(post("/api/ponto"), token).andExpect(status().isCreated()).andExpect(jsonPath("$.tipo").value("RETORNO_ALMOCO"));
+        chamar(post("/api/ponto"), token).andExpect(status().isCreated()).andExpect(jsonPath("$.tipo").value("SAIDA"));
         chamar(post("/api/ponto"), token).andExpect(status().isBadRequest());
     }
 
@@ -104,12 +135,18 @@ class ApiTest {
     void rhAprovaFerias() throws Exception {
         String resposta = chamar(post("/api/ferias").contentType(MediaType.APPLICATION_JSON)
                 .content("{\"dataInicio\":\"2027-01-10\",\"dataFim\":\"2027-01-19\"}"), tokenMaria)
+                .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.status").value("PENDENTE"))
                 .andReturn().getResponse().getContentAsString();
         Integer id = JsonPath.read(resposta, "$.id");
 
         chamar(put("/api/ferias/" + id + "/APROVADA"), tokenMaria).andExpect(status().isForbidden());
+        chamar(put("/api/ferias/" + id + "/PENDENTE"), tokenRh).andExpect(status().isBadRequest());
+        chamar(put("/api/ferias/" + id + "/INVALIDO"), tokenRh)
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.mensagem").exists());
         chamar(put("/api/ferias/" + id + "/APROVADA"), tokenRh).andExpect(jsonPath("$.status").value("APROVADA"));
+        chamar(put("/api/ferias/" + id + "/RECUSADA"), tokenRh).andExpect(status().isBadRequest());
     }
 
     private String login(String email) throws Exception {
@@ -124,7 +161,7 @@ class ApiTest {
         String corpo = "{\"nome\":\"Teste\",\"cpf\":\"" + cpf + "\",\"email\":\"" + email
                 + "\",\"cargo\":\"Analista\",\"departamento\":\"TI\",\"perfil\":\"FUNCIONARIO\"}";
         chamar(post("/api/funcionarios").contentType(MediaType.APPLICATION_JSON).content(corpo), tokenRh)
-                .andExpect(status().isOk());
+                .andExpect(status().isCreated());
         return login(email);
     }
 

@@ -23,7 +23,7 @@ public class FeriasService {
 
     public FeriasResponse solicitar(Funcionario funcionario, FeriasRequest request) {
         if (request.dataFim().isBefore(request.dataInicio())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "A data de fim deve ser depois da data de inicio");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "A data de fim deve ser igual ou posterior à data de início");
         }
         SolicitacaoFerias solicitacao = new SolicitacaoFerias(funcionario, request.dataInicio(), request.dataFim());
         return FeriasResponse.de(feriasRepository.save(solicitacao));
@@ -40,8 +40,14 @@ public class FeriasService {
     }
 
     public FeriasResponse decidir(Long id, StatusFerias status) {
+        if (status == StatusFerias.PENDENTE) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Informe APROVADA ou RECUSADA");
+        }
         SolicitacaoFerias solicitacao = feriasRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Solicitacao nao encontrada"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Solicitação não encontrada"));
+        if (solicitacao.getStatus() != StatusFerias.PENDENTE) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Esta solicitação já foi decidida");
+        }
         solicitacao.setStatus(status);
         return FeriasResponse.de(feriasRepository.save(solicitacao));
     }

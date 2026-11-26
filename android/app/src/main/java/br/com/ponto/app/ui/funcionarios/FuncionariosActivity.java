@@ -10,6 +10,7 @@ import androidx.lifecycle.ViewModelProvider;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 import br.com.ponto.app.R;
+import br.com.ponto.app.api.Resultado;
 import br.com.ponto.app.databinding.ActivityListaBinding;
 import br.com.ponto.app.databinding.DialogFuncionarioBinding;
 import br.com.ponto.app.databinding.ItemListaBinding;
@@ -40,18 +41,34 @@ public class FuncionariosActivity extends TelaComVoltar {
                 tela.textoVazio.setVisibility(resultado.dados.isEmpty() ? View.VISIBLE : View.GONE);
                 adapter.atualizar(resultado.dados);
             } else {
-                Toast.makeText(this, resultado.erro, Toast.LENGTH_LONG).show();
+                tratarErro(resultado.erro);
             }
         });
 
-        viewModel.getSalvo().observe(this, resultado -> {
-            Toast.makeText(this, resultado.ok() ? "Funcionário salvo" : resultado.erro, Toast.LENGTH_LONG).show();
-            viewModel.carregar();
+        viewModel.getSalvo().observe(this, evento -> {
+            Resultado<Funcionario> resultado = evento.consumir();
+            if (resultado == null) {
+                return;
+            }
+            if (resultado.ok()) {
+                Toast.makeText(this, R.string.funcionario_salvo, Toast.LENGTH_SHORT).show();
+                viewModel.carregar();
+            } else {
+                tratarErro(resultado.erro);
+            }
         });
 
-        viewModel.getExcluido().observe(this, resultado -> {
-            Toast.makeText(this, resultado.ok() ? "Funcionário excluído" : resultado.erro, Toast.LENGTH_LONG).show();
-            viewModel.carregar();
+        viewModel.getExcluido().observe(this, evento -> {
+            Resultado<Void> resultado = evento.consumir();
+            if (resultado == null) {
+                return;
+            }
+            if (resultado.ok()) {
+                Toast.makeText(this, R.string.funcionario_excluido, Toast.LENGTH_SHORT).show();
+                viewModel.carregar();
+            } else {
+                tratarErro(resultado.erro);
+            }
         });
 
         viewModel.carregar();
@@ -59,13 +76,17 @@ public class FuncionariosActivity extends TelaComVoltar {
 
     private void preencher(ItemListaBinding item, Funcionario funcionario) {
         item.textoTitulo.setText(funcionario.nome);
-        item.textoDestaque.setText("RH".equals(funcionario.perfil) ? "RH" : "");
+        item.textoDestaque.setText("RH".equals(funcionario.perfil) ? getString(R.string.rh) : "");
         item.textoLinha1.setText(funcionario.cargo + "  ·  " + funcionario.departamento);
-        item.textoLinha2.setText(funcionario.email + "  ·  CPF " + funcionario.cpf);
+        item.textoLinha2.setText(funcionario.email + "  ·  " + getString(R.string.cpf) + " " + funcionario.cpf);
     }
 
     private void abrirOpcoes(Funcionario funcionario) {
-        String[] opcoes = {"Ver histórico de ponto", "Editar", "Excluir"};
+        String[] opcoes = {
+                getString(R.string.ver_historico_ponto),
+                getString(R.string.editar),
+                getString(R.string.excluir)
+        };
         new MaterialAlertDialogBuilder(this)
                 .setTitle(funcionario.nome)
                 .setItems(opcoes, (dialogo, opcao) -> {
@@ -83,9 +104,9 @@ public class FuncionariosActivity extends TelaComVoltar {
 
     private void confirmarExclusao(Funcionario funcionario) {
         new MaterialAlertDialogBuilder(this)
-                .setMessage("Excluir " + funcionario.nome + " e todos os seus registros?")
+                .setMessage(getString(R.string.confirmar_exclusao_funcionario, funcionario.nome))
                 .setNegativeButton(R.string.cancelar, null)
-                .setPositiveButton("Excluir", (dialogo, botao) -> viewModel.excluir(funcionario))
+                .setPositiveButton(R.string.excluir, (dialogo, botao) -> viewModel.excluir(funcionario))
                 .show();
     }
 
@@ -99,7 +120,7 @@ public class FuncionariosActivity extends TelaComVoltar {
         formulario.checkRh.setChecked("RH".equals(funcionario.perfil));
 
         new MaterialAlertDialogBuilder(this)
-                .setTitle(funcionario.id == null ? "Novo funcionário" : "Editar funcionário")
+                .setTitle(funcionario.id == null ? R.string.novo_funcionario : R.string.editar_funcionario)
                 .setView(formulario.getRoot())
                 .setNegativeButton(R.string.cancelar, null)
                 .setPositiveButton(R.string.salvar, (dialogo, botao) -> {

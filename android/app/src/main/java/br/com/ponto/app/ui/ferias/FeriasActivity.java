@@ -12,6 +12,7 @@ import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 
 import br.com.ponto.app.R;
+import br.com.ponto.app.api.Resultado;
 import br.com.ponto.app.databinding.ActivityListaBinding;
 import br.com.ponto.app.databinding.DialogFeriasBinding;
 import br.com.ponto.app.databinding.ItemListaBinding;
@@ -53,19 +54,23 @@ public class FeriasActivity extends TelaComVoltar {
                 tela.textoVazio.setVisibility(resultado.dados.isEmpty() ? View.VISIBLE : View.GONE);
                 adapter.atualizar(resultado.dados);
             } else {
-                Toast.makeText(this, resultado.erro, Toast.LENGTH_LONG).show();
+                tratarErro(resultado.erro);
             }
         });
 
-        viewModel.getAlteracao().observe(this, resultado -> {
+        viewModel.getAlteracao().observe(this, evento -> {
+            Resultado<Ferias> resultado = evento.consumir();
+            if (resultado == null) {
+                return;
+            }
             if (resultado.ok()) {
                 String status = resultado.dados.status;
-                String mensagem = "PENDENTE".equals(status) ? "Solicitação enviada"
-                        : "Férias " + Formatador.texto(status).toLowerCase() + "s";
+                String mensagem = "PENDENTE".equals(status) ? getString(R.string.solicitacao_enviada)
+                        : getString(R.string.ferias_decididas, Formatador.texto(status).toLowerCase());
                 Toast.makeText(this, mensagem, Toast.LENGTH_SHORT).show();
                 viewModel.carregar();
             } else {
-                Toast.makeText(this, resultado.erro, Toast.LENGTH_LONG).show();
+                tratarErro(resultado.erro);
             }
         });
 
