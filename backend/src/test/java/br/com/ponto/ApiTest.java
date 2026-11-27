@@ -129,10 +129,35 @@ class ApiTest {
         chamar(put("/api/ponto/manual").contentType(MediaType.APPLICATION_JSON)
                 .content(manual.replace("\"12:00\"", "\"07:00\"")), token)
                 .andExpect(status().isBadRequest());
+
+        String horariosIguais = """
+                {"data":"2026-11-25","entrada":"22:17","saidaAlmoco":"22:17",
+                 "retornoAlmoco":"22:17","saida":"22:30","motivo":"ESQUECIMENTO"}
+                """;
+        chamar(put("/api/ponto/manual").contentType(MediaType.APPLICATION_JSON).content(horariosIguais), token)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.horasTrabalhadasMinutos").value(13));
+
+        String turnoNoturno = """
+                {"data":"2026-11-26","entrada":"22:17","saidaAlmoco":"23:00",
+                 "retornoAlmoco":"23:30","saida":"01:02","motivo":"OUTROS"}
+                """;
+        chamar(put("/api/ponto/manual").contentType(MediaType.APPLICATION_JSON).content(turnoNoturno), token)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.horasTrabalhadasMinutos").value(135));
+
+        chamar(get("/api/ponto/historico?data=2026-11-26"), token)
+                .andExpect(jsonPath("$.dias[0].marcacoes[0].tipo").value("ENTRADA"))
+                .andExpect(jsonPath("$.dias[0].marcacoes[3].tipo").value("SAIDA"))
+                .andExpect(jsonPath("$.dias[0].horasTrabalhadasMinutos").value(135));
     }
 
     @Test
     void rhAprovaFerias() throws Exception {
+        chamar(post("/api/ferias").contentType(MediaType.APPLICATION_JSON)
+                .content("{\"dataInicio\":\"2027-01-01\",\"dataFim\":\"2029-12-31\"}"), tokenMaria)
+                .andExpect(status().isBadRequest());
+
         String resposta = chamar(post("/api/ferias").contentType(MediaType.APPLICATION_JSON)
                 .content("{\"dataInicio\":\"2027-01-10\",\"dataFim\":\"2027-01-19\"}"), tokenMaria)
                 .andExpect(status().isCreated())
@@ -147,6 +172,17 @@ class ApiTest {
                 .andExpect(jsonPath("$.mensagem").exists());
         chamar(put("/api/ferias/" + id + "/APROVADA"), tokenRh).andExpect(jsonPath("$.status").value("APROVADA"));
         chamar(put("/api/ferias/" + id + "/RECUSADA"), tokenRh).andExpect(status().isBadRequest());
+
+        String propriasRh = chamar(post("/api/ferias").contentType(MediaType.APPLICATION_JSON)
+                .content("{\"dataInicio\":\"2027-02-01\",\"dataFim\":\"2027-02-10\"}"), tokenRh)
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+        Integer idPropriasRh = JsonPath.read(propriasRh, "$.id");
+
+        chamar(get("/api/ferias/pendentes"), tokenRh)
+                .andExpect(jsonPath("$[?(@.id == " + idPropriasRh + ")]").isEmpty());
+        chamar(put("/api/ferias/" + idPropriasRh + "/APROVADA"), tokenRh)
+                .andExpect(status().isForbidden());
     }
 
     private String login(String email) throws Exception {

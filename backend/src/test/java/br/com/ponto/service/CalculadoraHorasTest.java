@@ -35,6 +35,17 @@ class CalculadoraHorasTest {
         assertNull(CalculadoraHoras.saldoDoDia(dia("08:00", "12:00")));
     }
 
+    @Test
+    void turnoNoturnoVirandoMeiaNoiteCalculaCorretamente() {
+        assertEquals(135, CalculadoraHoras.minutosTrabalhados(dia("22:17", "23:00", "23:30", "01:02")));
+        assertEquals(0, CalculadoraHoras.saldoDoDia(dia("22:00", "02:00", "03:00", "07:00")));
+    }
+
+    @Test
+    void horariosIguaisCalculamSemErro() {
+        assertEquals(13, CalculadoraHoras.minutosTrabalhados(dia("22:17", "22:17", "22:17", "22:30")));
+    }
+
     private static List<RegistroPonto> dia(String... horas) {
         List<RegistroPonto> marcacoes = new ArrayList<>();
         for (int i = 0; i < horas.length; i++) {

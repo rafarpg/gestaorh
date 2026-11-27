@@ -48,13 +48,13 @@ public class FeriasController {
     @GetMapping("/pendentes")
     public List<FeriasResponse> pendentes(@RequestAttribute(AutenticacaoInterceptor.USUARIO_LOGADO) Funcionario usuario) {
         autenticacaoService.exigirRh(usuario);
-        return feriasService.pendentes();
+        return feriasService.pendentes(usuario);
     }
 
     @PutMapping("/{id}/{status}")
     public FeriasResponse decidir(@PathVariable Long id, @PathVariable StatusFerias status,
                                   @RequestAttribute(AutenticacaoInterceptor.USUARIO_LOGADO) Funcionario usuario) {
         autenticacaoService.exigirRh(usuario);
-        return feriasService.decidir(id, status);
+        return feriasService.decidir(id, status, usuario);
     }
 }

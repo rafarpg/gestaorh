@@ -19,6 +19,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -59,10 +60,13 @@ public class PontoService {
     @Transactional
     public DiaPontoResponse lancarManual(Funcionario funcionario, PontoManualRequest request) {
         List<LocalTime> horarios = List.of(request.entrada(), request.saidaAlmoco(), request.retornoAlmoco(), request.saida());
+        long duracaoTotal = 0;
         for (int i = 1; i < horarios.size(); i++) {
-            if (!horarios.get(i).isAfter(horarios.get(i - 1))) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Os horários devem estar em ordem crescente");
-            }
+            duracaoTotal += CalculadoraHoras.duracaoMinutos(horarios.get(i - 1), horarios.get(i));
+        }
+        if (duracaoTotal > CalculadoraHoras.MINUTOS_NO_DIA) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Os horários devem estar em ordem cronológica (turno máximo de 24h)");
         }
         registroPontoRepository.deleteByFuncionarioAndData(funcionario, request.data());
         registroPontoRepository.flush();
@@ -107,11 +111,20 @@ public class PontoService {
     }
 
     private List<RegistroPonto> marcacoesDoDia(Funcionario funcionario, LocalDate data) {
-        return registroPontoRepository.findByFuncionarioAndDataOrderByHoraAscIdAsc(funcionario, data);
+        return ordenarPorTipo(registroPontoRepository.findByFuncionarioAndDataOrderByHoraAscIdAsc(funcionario, data));
     }
 
     private static Map<LocalDate, List<RegistroPonto>> agruparPorDia(List<RegistroPonto> registros) {
-        return registros.stream().collect(Collectors.groupingBy(RegistroPonto::getData, TreeMap::new, Collectors.toList()));
+        Map<LocalDate, List<RegistroPonto>> porDia = registros.stream()
+                .collect(Collectors.groupingBy(RegistroPonto::getData, TreeMap::new, Collectors.toList()));
+        porDia.replaceAll((data, lista) -> ordenarPorTipo(lista));
+        return porDia;
+    }
+
+    private static List<RegistroPonto> ordenarPorTipo(List<RegistroPonto> marcacoes) {
+        return marcacoes.stream()
+                .sorted(Comparator.comparingInt(r -> r.getTipo().ordinal()))
+                .toList();
     }
 
     private static TipoMarcacao proximaMarcacao(List<RegistroPonto> marcacoes) {
