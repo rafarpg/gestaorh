@@ -1,6 +1,6 @@
 # Ponto RH
 
-**Vídeo de demonstração:** [<https://youtu.be/3hsUNN4aNSM>](https://youtu.be/CNXY82oMzZc)
+**Vídeo de demonstração:** <https://youtu.be/CNXY82oMzZc>
 
 App de registro de ponto com banco de horas. O front-end é Android nativo (Java), o back-end é Java
 (Spring Boot) e os dois se comunicam por uma API REST.
